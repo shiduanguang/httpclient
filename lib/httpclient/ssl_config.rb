@@ -278,7 +278,7 @@ class HTTPClient
       change_notify
     end
 
-    # interfaces for SSLSocketWrap.
+    # interfaces for SSLSocket.
     def set_context(ctx) # :nodoc:
       load_trust_ca unless @cacerts_loaded
       @cacerts_loaded = true
