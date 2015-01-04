@@ -78,11 +78,17 @@ class HTTPClient
     # For server side configuration.  Ignore this.
     attr_reader :client_ca # :nodoc:
 
+    # These array keeps original files/dirs that was added to @cert_store
+    attr_reader :cert_store_items
+    attr_reader :cert_store_crl_items
+
     # Creates a SSLConfig.
     def initialize(client)
       return unless SSLEnabled
       @client = client
       @cert_store = X509::Store.new
+      @cert_store_items = [:default]
+      @cert_store_crl_items = []
       @client_cert = @client_key = @client_ca = nil
       @verify_mode = SSL::VERIFY_PEER | SSL::VERIFY_FAIL_IF_NO_PEER_CERT
       @verify_depth = nil
@@ -155,6 +161,7 @@ class HTTPClient
       @cacerts_loaded = true # avoid lazy override
       @cert_store = X509::Store.new
       @cert_store.set_default_paths
+      @cert_store_items = [:default]
       change_notify
     end
 
@@ -165,6 +172,7 @@ class HTTPClient
     def clear_cert_store
       @cacerts_loaded = true # avoid lazy override
       @cert_store = X509::Store.new
+      @cert_store_items.clear
       change_notify
     end
 
@@ -175,6 +183,7 @@ class HTTPClient
     def cert_store=(cert_store)
       @cacerts_loaded = true # avoid lazy override
       @cert_store = cert_store
+      @cert_store_items.clear
       change_notify
     end
 
@@ -188,6 +197,7 @@ class HTTPClient
     def add_trust_ca(trust_ca_file_or_hashed_dir)
       @cacerts_loaded = true # avoid lazy override
       add_trust_ca_to_store(@cert_store, trust_ca_file_or_hashed_dir)
+      @cert_store_items << trust_ca_file_or_hashed_dir
       change_notify
     end
     alias set_trust_ca add_trust_ca
@@ -217,6 +227,7 @@ class HTTPClient
         crl = X509::CRL.new(File.open(crl) { |f| f.read })
       end
       @cert_store.add_crl(crl)
+      @cert_store_crl_items << crl
       @cert_store.flags = X509::V_FLAG_CRL_CHECK | X509::V_FLAG_CRL_CHECK_ALL
       change_notify
     end
@@ -408,6 +419,7 @@ class HTTPClient
     def load_cacerts(cert_store)
       file = File.join(File.dirname(__FILE__), 'cacert.p7s')
       add_trust_ca_to_store(cert_store, file)
+      @cert_store_items << file
     end
   end
 
