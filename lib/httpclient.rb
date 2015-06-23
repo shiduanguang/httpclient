@@ -1039,7 +1039,7 @@ private
     uri = to_resource_url(uri)
     if block
       filtered_block = proc { |r, str|
-        block.call(str) if r.ok?
+        block.call(r, str) if r.ok?
       }
     end
     if HTTP::Message.file?(body)
